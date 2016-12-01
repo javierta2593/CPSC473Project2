@@ -6,7 +6,8 @@ var express = require('express'),
     io = require('socket.io'),
     player = require('play-sound')(opts = {});
 
-var usersOnline = {};
+var userPlaying = {};
+var spectators = {};
 
 client = redis.createClient();
 
@@ -36,16 +37,26 @@ io.on('connection', function(socket) {
 
     //Joined Users Listener
     socket.on('join', function(username) {
-        usersOnline[socket.id] = username;
-        console.log('User Connected: ', usersOnline[socket.id]);
-        io.emit('username', username);
-        io.emit("update-users", usersOnline);
+        if(userPlaying.length == 5)
+        {
+            userPlaying[socket.id] = username;
+            console.log('User Connected: ', userPlaying[socket.id]);
+            io.emit('username', username);
+            io.emit("update-users", userPlaying);
+        }
+        else
+        {
+            spectators[socket.id] = username;
+            console.log('User Connected: ', spectators[socket.id]);
+            io.emit('username', username);
+            io.emit("update-users", spectators);
+        }
     });
 
     // Disconnected Users Listener
     socket.on('disconnect', function() {
-        console.log('User Disconnected: ', usersOnline[socket.id]);
+        console.log('User Disconnected: ', userPlaying[socket.id]);
         delete usersOnline[socket.id];
-        io.emit("update-users", usersOnline);
+        io.emit("update-users", userPlaying);
     });
 });
