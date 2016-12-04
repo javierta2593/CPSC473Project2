@@ -1,6 +1,6 @@
 var main = function() {
     'use strict';
-    $('#sign-in-form').show();
+    $('#login').show();
 
     var socket = io.connect('http://localhost:3000', {
         reconnect: true
@@ -40,31 +40,39 @@ var main = function() {
     });
 
     // Add New User
-    $('#getUsername').on('click', function(event) {
-        if ($('#usernameInput').val() !== '') {
-            var username = $('#usernameInput').val();
+    $('#createUser').on('click', function(event) {
+        if ($('#username').val() !== '') 
+        {
+            var username = $('#username').val();
             socket.emit('join', username);
-            $('#userInputDiv').hide();
-            $('#startNewRound').show();
-            $('#answerForm').show();
-            $('#newQuestionForm').show();
-            $('#scoreArea').show();
+            $('#login').hide();
         }
-        return false;
     });
 
-    // Update User List
-    socket.on("update-users", function(user) {
-        $("#users").empty();
-        $.each(user, function(clientID, name) {
-            $('#users').append("<li>" + name + "</li>");
-        });
+    socket.on("waiting-room", function()
+    {
+        alert("waiting for more players to join");
     });
 
+    socket.on("playing", function(users, userPlaying)
+    {
+        $('.game').show();
+        $('#p1').text(users[userPlaying[0]]);
+        $('#p2').text(users[userPlaying[1]]);
+        $('#p3').text(users[userPlaying[2]]);
+        $('#p4').text(users[userPlaying[3]]);
+        $('#p5').text(users[userPlaying[4]]);                                
+    });    
 
-    $('#startNewRound').on('click', function(event) {
-        audioElement.play();
-        return false;
+    socket.on("spectating", function(users, userPlaying)
+    {
+        $('.game').show();
+        $('#roundBid').hide();
+        $('#p1').text(users[userPlaying[0]]);
+        $('#p2').text(users[userPlaying[1]]);
+        $('#p3').text(users[userPlaying[2]]);
+        $('#p4').text(users[userPlaying[3]]);
+        $('#p5').text(users[userPlaying[4]]); 
     });
 };
 
