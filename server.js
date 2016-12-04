@@ -35,14 +35,14 @@ db.once('open', function() {
 	
     var collection = db.collection('items');
 
-	//http://stackoverflow.com/questions/2727167/getting-all-filenames-in-a-directory-with-node-js
-	//GET file names and store each file name as a string to add to the database
+    //http://stackoverflow.com/questions/2727167/getting-all-filenames-in-a-directory-with-node-js
+    //GET file names and store each file name as a string to add to the database
     var test = './public/imagesForDB';
     fs.readdir(test, (err, files) => {
         files.forEach(file => {
     	    
-    	    //console.log(file);
-    	    //-------------------------------------------------------------
+            //console.log(file);
+            //-------------------------------------------------------------
     	    //parse logic string for price
     	    var price = file.split("$");
     	    //we only care about the second part of object since result is 2 objects e.g [<itemname> , <price>]
@@ -62,17 +62,17 @@ db.once('open', function() {
     	    var path = '/public/imagesForDB/';
     	    var imagePath = path+file;
     	    var input = {
-        	    "image": imagePath,
-        	    "price": parsedPrice,
-        	    "id": count
-    	    };
+                "image": imagePath,
+                "price": parsedPrice,
+                "id": count
+            };
 
- 		    collection.insert([input], function(err, result) {
-        	    if (err) {
-            	    console.log(err);
-        	    }
-    	    });	
-  	    });
+            collection.insert([input], function(err, result) {
+                if (err) {
+                    console.log(err);
+                }
+            });	
+        });
     })
     console.log("Database Populated");
 
