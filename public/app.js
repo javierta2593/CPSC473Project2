@@ -7,20 +7,37 @@ var main = function() {
     });
 
     var audioElement = document.createElement('audio');
-    audioElement.setAttribute('src', '/Price-is-right-losing-horn.mp3');
+    audioElement.setAttribute('src', '/the-price-is-right-sound-byte_cutted.mp3');
 
     var homePageAudio = document.createElement('audio');
     homePageAudio.setAttribute('src', '/price_is_right.mp3');
 
     audioElement.addEventListener('ended', function() {
-        this.play();
+        homePageAudio.pause();
+        homePageAudio.currentTime = 0;
     }, false)
 
     homePageAudio.addEventListener('ended', function() {
-        this.play();
+        homePageAudio.pause();
+        homePageAudio.currentTime = 0;
     }, false)
 
     homePageAudio.play();
+
+    $('#stopMusic').on('click', function(event) {
+        homePageAudio.pause();
+        homePageAudio.currentTime = 0;
+    });
+
+    $('#frontPageImage').click(function(){
+
+        homePageAudio.pause();
+        homePageAudio.currentTime = 0;
+        audioElement.play();
+        setTimeout(function(){
+            window.location.href = '/gamePage.html'; },4000);
+
+    });
 
     // Add New User
     $('#getUsername').on('click', function(event) {
@@ -53,7 +70,7 @@ var main = function() {
 
 
 
-
+/*
 //TRYING SOMETHING OUT
 
 // Create new wheel object specifying the parameters at creation time.
@@ -199,7 +216,7 @@ function alertPrize()
     alert("You have won " + winningSegment.text);
 }
 
-
+*/
 
 
 
