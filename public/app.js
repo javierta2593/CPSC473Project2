@@ -64,15 +64,10 @@ var main = function() {
         });
     });
 
-    socket.on("waiting-room", function()
-    {
-        $('#login').hide();
-        //alert("waiting for more players to join");
-    });
-
     socket.on("playing", function(users, userPlaying)
     {
         $('.game').show();
+        $('.game #gameplay').show();
         $('#p1').text(users[userPlaying[0]]);
         $('#p2').text(users[userPlaying[1]]);
         $('#p3').text(users[userPlaying[2]]);
@@ -83,6 +78,7 @@ var main = function() {
     socket.on("spectating", function(users, userPlaying)
     {
         $('.game').show();
+        $('.game #gameplay #winnersCircle').hide();
         $('#roundBid').hide();
         $('#p1').text(users[userPlaying[0]]);
         $('#p2').text(users[userPlaying[1]]);
