@@ -12,11 +12,14 @@ var express = require('express'),
 
 var userPlaying = {};
 var spectators = {};
-var bids = {};
+
+var playerBids = new Object();
+var playerBidResults = new Object();
+
 var imagePrice;
-var playerBidResults = {};
 var count = 0;
 var currImg;
+var min = 0;
 
 var imagePath = '/public/imagesForDB/baby_stroller.jpg'
 
@@ -261,21 +264,76 @@ io.on('connection', function(socket){
 
 
     socket.on("bid", function(bid){
-        bids[socket.id] = bid;
-        var size = Object.keys(bids).length;
-        console.log("we here");
-        console.log(bids[socket.id]);
+        
+
+        //example object should have { yU6Vew8YooBV7AlNAAAL: '29.99' }
+        playerBids[socket.id] = bid;
+
+        var size = Object.keys(playerBids).length;
+        var winner;
+        //console.log(bids[socket.id]);
+
+        console.log("this is size");
+        console.log(size);
+
+        console.log("this is the current object array");
+        console.log(playerBids);
+
+        //currImg has the image Object such as { _id : blah , image: blah, price: blah}
+        imagePrice = currImg.price;
+        console.log("this is image price");
+        console.log(imagePrice);
+
+        io.emit("update-bid", playerBids, userPlaying);
+
+        //when all 5 players have submitted their bids
         if(size === 5)
         {
-            for(var key in bids)
+            //reset min
+            min = 0;
+
+            for(var key in playerBids)
             {
-                if(bids.hasOwnProperty(key))
+                if(playerBids.hasOwnProperty(key))
                 {
-                    playerBidResults[key] = imagePrice - bids[key];
+                    playerBidResults[key] = imagePrice - playerBids[key];
                     console.log("differences: " + playerBidResults[key]);
+
+                    //if player bid is a negative number, player guessed too high, so discard
+                    if (playerBidResults[key] < 0)
+                    {
+                        delete playerBidResults[key];
+                    }
+                    
                 }
             }
+
+            console.log("show player results")
+            console.log(playerBidResults);
+
+            //determine winner by finding the minimum or closest bid
+            console.log(min);
+            for(var key in playerBidResults)
+            {
+                if(playerBidResults.hasOwnProperty(key))
+                {
+                    min = playerBidResults[key];
+                    if(playerBidResults[key] < min)
+                    {
+                        min = playerBidResults[key];
+                        winner = key;
+                    }
+
+                }
+
+            }
+            console.log("winner has this min");
+            console.log(min);
+
+            io.emit("roundWinner", users[winner]);
+
         }
+        
     });
 
 

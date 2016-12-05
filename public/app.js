@@ -69,6 +69,33 @@ var main = function() {
         }
     });
 
+    socket.on("update-bid", function(playerBids, userPlaying)
+    {
+        $('.game').show();
+        $('.game #gameplay').show();
+
+        if(playerBids[userPlaying[0]] !== null)
+        {
+            $('#p1-bid').text(playerBids[userPlaying[0]]);
+        }
+        if(playerBids[userPlaying[1]] !== null)
+        {
+            $('#p2-bid').text(playerBids[userPlaying[1]]);
+        }
+        if(playerBids[userPlaying[2]] !== null)
+        {
+            $('#p3-bid').text(playerBids[userPlaying[2]]);
+        }
+        if(playerBids[userPlaying[3]] !== null)
+        {
+            $('#p4-bid').text(playerBids[userPlaying[3]]);
+        }
+        if(playerBids[userPlaying[4]] !== null)
+        {
+            $('#p5-bid').text(playerBids[userPlaying[4]]);
+        }                               
+    }); 
+
     // Add New User
     $('#createUser').on('click', function(event) {
         if ($('#username').val() !== '') 
