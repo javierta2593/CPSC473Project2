@@ -13,14 +13,15 @@
     <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
     <script src="semantic/dist/semantic.js"></script>
     <!--Scripts for wheel-->
-    <script type="text/javascript" src="Winwheel.js"></script>
+    <!--<script type="text/javascript" src="Winwheel.js"></script>-->
+    <script src="http://knockoutjs.com/downloads/knockout-latest.js"></script>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/gsap/latest/TweenMax.min.js"></script>
 </head>
 
 <body style="background-image: url('./background.png'); background-repeat: no-repeat; background-size:cover;">
 
   <button id="stopMusic">MUTE</button>
-  <div id="usersOnline" class="ui small form">
+  <div class="ui small form">
       <p><h2 class="ui center aligned teal image header">Users Online</h2></p>
       <ul id="users"></ul>
   </div>
@@ -91,7 +92,7 @@
       <div class="eight wide column" style="background-color:black;">
         <div class="ui centered grid">
           <!--Image to bid on-->
-          <img id="currentImage" src="l/IMG_2093.JPG"></img>
+          <img id="currentImage" data-bind="attr : {src: imagePath}" ></img>
           <!--Spin Wheel-->
           <div id="canvas" style="display:none">
             <canvas width="400" height="400">

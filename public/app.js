@@ -3,6 +3,27 @@ var main = function() {
     $('#login').show();
     $('#usersOnline').hide();
 
+    //View Model
+    function viewModel(){
+    var self = this;
+    self.imagePath = ko.observable('');
+        /*self.player1 = ko.observable('Player 1'); 
+        self.player2 = ko.observable('Player 2');
+    self.player3 = ko.observable('Player 3');
+    self.player4 = ko.observable('Player 4');
+    self.player5 = ko.observable('Player 5');
+    self.player1Price = ko.observable('0.00');
+    self.player2Price = ko.observable('0.00');
+    self.player3Price = ko.observable('0.00');
+    self.player4Price = ko.observable('0.00');
+    self.player5Price = ko.observable('0.00');*/
+    }
+     
+    var vm = new viewModel(); //Hold the viewmodel in a variable so that it can be reffered inside socket.io events
+    ko.applyBindings(vm);
+
+    var currPrice;
+
     var socket = io.connect('http://localhost:3000', {
         reconnect: true
     });
@@ -43,7 +64,8 @@ var main = function() {
     $('#inputBid').on('click'), function(event) {
         if ($('#bid').val() !== '')
         {
-            var bid = $('#bid').val();
+            var usrBid = $('#bid').val();
+            socket.emit('bid', usrBid);
         }
     }
 
@@ -77,7 +99,12 @@ var main = function() {
         });
     });
 
-    socket.on("playing", function(users, userPlaying)
+    socket.on("game_started", function(input) {
+        vm.imagePath(input.image);
+        currPrice = input.price;
+    });
+
+    socket.on("playing", function(users, userPlaying, input)
     {
         $('.game').show();
         $('.game #gameplay').show();

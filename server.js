@@ -12,9 +12,11 @@ var express = require('express'),
 
 var userPlaying = {};
 var spectators = {};
-
-
+var bids = {};
+var imagePrice;
+var playerBidResults = {};
 var count = 0;
+var currImg;
 
 var imagePath = '/public/imagesForDB/baby_stroller.jpg'
 
@@ -23,11 +25,29 @@ mongoose.Promise = global.Promise;
 
 var db = mongoose.connection;
 mongoose.connect('mongodb://localhost:27017/pricesDB');
+
+MongoClient.connect('mongodb://localhost:27017/pricesDB', function(err,db){
+    
+    var collection = db.collection('items');
+
+    collection.remove({},function (err, db)
+    {
+     if(err)
+     {
+         console.log('Couldnt remove collection');
+     }
+     else
+      {
+         console.log('Collection removed ');
+     }
+    });
+});
+
 db.on('error', console.error);
 db.once('open', function() {
     console.log("Connected to database");
     console.log("Populating the database");
-	
+    
     var collection = db.collection('items');
 
     //http://stackoverflow.com/questions/2727167/getting-all-filenames-in-a-directory-with-node-js
@@ -35,28 +55,28 @@ db.once('open', function() {
     var test = './public/imagesForDB';
     fs.readdir(test, (err, files) => {
         files.forEach(file => {
-    	    
+            
             //console.log(file);
             //-------------------------------------------------------------
-    	    //parse logic string for price
-    	    var price = file.split("$");
-    	    //we only care about the second part of object since result is 2 objects e.g [<itemname> , <price>]
-    	    price = price[1];
-    	    var i = 0;
-    	    var parsedPrice = "";
-    	    while (price[i] != 'j')
-    	    {
-    	        parsedPrice += price[i];
-    	        i++;
-    	    }
-    	    parsedPrice = parsedPrice.slice(0, -1);
-    	    //--------------------------------------------------------------
+            //parse logic string for price
+            var price = file.split("$");
+            //we only care about the second part of object since result is 2 objects e.g [<itemname> , <price>]
+            price = price[1];
+            var i = 0;
+            var parsedPrice = "";
+            while (price[i] != 'j')
+            {
+                parsedPrice += price[i];
+                i++;
+            }
+            parsedPrice = parsedPrice.slice(0, -1);
+            //--------------------------------------------------------------
 
-    	    console.log(parsedPrice);
-    	    count += 1;
-    	    var path = '/public/imagesForDB/';
-    	    var imagePath = path+file;
-    	    var input = {
+            console.log(parsedPrice);
+            count += 1;
+            var path = 'http://localhost:3000/imagesForDB/';
+            var imagePath = path+file;
+            var input = {
                 "image": imagePath,
                 "price": parsedPrice,
                 "id": count
@@ -66,7 +86,11 @@ db.once('open', function() {
                 if (err) {
                     console.log(err);
                 }
-            });	
+        else{
+            console.log("record inserted");
+        }
+        
+            }); 
         });
     })
     console.log("Database Populated");
@@ -98,15 +122,54 @@ var numPlayers = 0;
 var roundStarted = false;
 var picked = "";
 var x = 0;
+var imageQueried = false;
 
 /* http://stackoverflow.com/questions/2532218/pick-random-property-from-a-javascript-object/15106541 */
 function pickRandomProperty() {
     var result;
-    var count = 0;
+    var randNum = 0;
     for (var prop in users)
-        if (Math.random() < 1/++count)
+        if (Math.random() < 1/++randNum)
            result = prop;
     return result;
+}
+
+function startGame(socket) {
+    var noImage = true;
+    if(!imageQueried)
+    {
+        random = Math.floor((Math.random() * count) + 1); //just pick a random picture
+        console.log(count);
+        var collection = db.collection('items');
+        //while(noImage)
+        //{
+            collection.findOne({id:random},function (err, input)
+            {
+                if(err)
+                {
+                    res.send('error');
+                    console.log("error");
+                }
+                else if(input === null)
+                {
+                    noImage = true;
+                }
+                else
+                {
+                    noImage = false;
+                    console.log("Starting Game...");
+                    currImg = input;
+                    console.log(currImg);
+                    io.emit("game_started", input);                    
+                }
+            });
+            imageQueried = true;
+       // }
+    }
+    else
+    {
+        socket.emit("game_started");
+    }
 }
 
 // Socket.io 
@@ -117,7 +180,9 @@ io.on('connection', function(socket){
         console.log(users[socket.id] + ' has connected ' + socket.id);
 
         numPlayers += 1;
-
+        
+        io.emit("update-users", users);
+        
         if(roundStarted === false)
         {
             if(numPlayers >= 6)
@@ -170,6 +235,7 @@ io.on('connection', function(socket){
                                 {
                                     playing = true;
                                     io.to(key).emit("playing", users, userPlaying);
+                                    startGame(socket); //Send  a broadcast to all users with image
                                 }
                             }
                         }
@@ -177,6 +243,7 @@ io.on('connection', function(socket){
                     if(playing === false)
                     {
                         io.to(key).emit("spectating", users, userPlaying);
+                        startGame(socket); 
                     }
                 }
             }
@@ -188,6 +255,25 @@ io.on('connection', function(socket){
         else
         {
             socket.emit("spectating", users, userPlaying);
+            startGame(socket); 
+        }
+    });
+
+
+    socket.on("bid", function(bid){
+        bids[socket.id] = bid;
+        var size = Object.keys(bids).length;
+        console.log(bids[socket.id]);
+        if(size === 5)
+        {
+            for(var key in bids)
+            {
+                if(bids.hasOwnProperty(key))
+                {
+                    playerBidResults[key] = imagePrice - bids[key];
+                    console.log("differences: " + playerBidResults[key]);
+                }
+            }
         }
     });
 
@@ -196,7 +282,7 @@ io.on('connection', function(socket){
         console.log(users[socket.id] + " has left the server.");
         //io.emit("update-users", users[socket.id]);
         delete users[socket.id];
-        //io.emit("update-people", users);
+        io.emit("update-users", users);
     });
 
 });
