@@ -263,6 +263,7 @@ io.on('connection', function(socket){
     socket.on("bid", function(bid){
         bids[socket.id] = bid;
         var size = Object.keys(bids).length;
+        console.log("we here");
         console.log(bids[socket.id]);
         if(size === 5)
         {
