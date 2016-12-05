@@ -1,6 +1,7 @@
 var main = function() {
     'use strict';
     $('#login').show();
+    $('#usersOnline').hide();
 
     var socket = io.connect('http://localhost:3000', {
         reconnect: true
@@ -54,19 +55,24 @@ var main = function() {
             homePageAudio.pause();
             homePageAudio.currentTime = 0;
             audioElement.play();
-            setTimeout(function(){
-                var username = $('#username').val();
-                socket.emit('join', username);
-                $('.game').show();
-                $('.game #gameplay').hide();
-            },4000);
+            var username = $('#username').val();
+            socket.emit('join', username);
+            $('.game').show();
+            $('.game #gameplay').hide();
+            $('#usersOnline').show();
+            // setTimeout(function(){
+            //     var username = $('#username').val();
+            //     socket.emit('join', username);
+            //     $('.game').show();
+            //     $('.game #gameplay').hide();
+            // },4000);
         }
         return false;
     });
 
     socket.on("update-users", function(user) {
         $("#users").empty();
-        $.each(user, function(name) {
+        $.each(user, function(clientID, name) {
             $('#users').append("<li>" + name + "</li>");
         });
     });
