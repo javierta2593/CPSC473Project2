@@ -61,13 +61,13 @@ var main = function() {
 
     });
 
-    $('#inputBid').on('click'), function(event) {
+    $('#inputBid').click( function(event) {
         if ($('#bid').val() !== '')
         {
             var usrBid = $('#bid').val();
             socket.emit('bid', usrBid);
         }
-    }
+    });
 
     // Add New User
     $('#createUser').on('click', function(event) {
