@@ -18,10 +18,10 @@
     <script src="http://cdnjs.cloudflare.com/ajax/libs/gsap/latest/TweenMax.min.js"></script>
 </head>
 
-<body style="background-image: url('./background.png'); background-repeat: no-repeat; background-size:cover;">
+<body style="background-image: url('./background.png'); background-repeat: no-repeat; background-size:contain;">
 
   <button id="stopMusic">MUTE</button>
-  <div class="ui small form">
+  <div class="ui small form" style="position:fixed">
       <p><h2 class="ui center aligned teal image header">Users Online</h2></p>
       <ul id="users"></ul>
   </div>
@@ -69,7 +69,7 @@
     <div style="display:none;"></div>
 
     <!--Container for 3 items: List of winners, current image, submission form-->
-    <div id="gameplay" class="ui grid" style="margin-top:160px; height:400px;">
+    <div id="gameplay" class="ui grid" style="position:fixed; margin-left:60px; margin-top:150px; width:100%; height:550px;">
 
       <!--List of current winners-->
       <div id="winnersCircle" class="four wide column">
@@ -82,7 +82,7 @@
             <p style="padding-bottom:10px;"></p>
             <p> </p>
             <p> </p>
-            <p> </p>  
+            <p> </p>
           </div>
         </div>
       </div>
@@ -145,7 +145,7 @@
 
     <!--Game play will consist of players placing bids that will show up here
         Each segment has an h2 and span elements that have data bindings-->
-    <div id="biddingBoard" class="ui horizontal segments" style="position:absolute; width:100%; top:83%;">
+    <div id="biddingBoard" class="ui horizontal segments" style="position:absolute; width:100%; top:90%;">
       <!--Player1-->
       <div class="ui center aligned segment" style="border:2px solid blue;">
         <!--Segment contains the name of player 1 and the price they are bidding-->
@@ -177,8 +177,9 @@
         <span style="padding:2px; border:1px solid purple;">$0.00</span>
       </div>
     </div>
+
   </div>
-  
+
 </body>
 
 <footer>
