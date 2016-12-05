@@ -39,6 +39,13 @@ var main = function() {
 
     });
 
+    $('#inputBid').on('click'), function(event) {
+        if ($('#bid').val() !== '')
+        {
+            var bid = $('#bid').val();
+        }
+    }
+
     // Add New User
     $('#createUser').on('click', function(event) {
         if ($('#username').val() !== '') 
