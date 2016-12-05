@@ -43,15 +43,31 @@ var main = function() {
     $('#createUser').on('click', function(event) {
         if ($('#username').val() !== '') 
         {
-            var username = $('#username').val();
-            socket.emit('join', username);
             $('#login').hide();
+            homePageAudio.pause();
+            homePageAudio.currentTime = 0;
+            audioElement.play();
+            setTimeout(function(){
+                var username = $('#username').val();
+                socket.emit('join', username);
+                $('.game').show();
+                $('.game #gameplay').hide();
+            },4000);
         }
+        return false;
+    });
+
+    socket.on("update-users", function(user) {
+        $("#users").empty();
+        $.each(user, function(name) {
+            $('#users').append("<li>" + name + "</li>");
+        });
     });
 
     socket.on("waiting-room", function()
     {
-        alert("waiting for more players to join");
+        $('#login').hide();
+        //alert("waiting for more players to join");
     });
 
     socket.on("playing", function(users, userPlaying)
