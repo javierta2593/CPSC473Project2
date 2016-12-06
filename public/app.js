@@ -109,12 +109,6 @@ var main = function() {
             $('.game').show();
             $('.game #gameplay').hide();
             $('#usersOnline').show();
-            // setTimeout(function(){
-            //     var username = $('#username').val();
-            //     socket.emit('join', username);
-            //     $('.game').show();
-            //     $('.game #gameplay').hide();
-            // },4000);
         }
         return false;
     });
@@ -123,6 +117,8 @@ var main = function() {
         $("#users").empty();
         $.each(user, function(clientID, name) {
             $('#users').append("<li>" + name + "</li>");
+            $('#users').css("color", "#FC8832");
+            $('#users').css("font-size", "20px");
         });
     });
 
