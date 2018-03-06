@@ -20,6 +20,7 @@ var imagePrice;
 var count = 0;
 var currImg;
 var min = 0;
+var winnerCount = 0;
 
 var imagePath = '/public/imagesForDB/baby_stroller.jpg'
 
@@ -120,6 +121,7 @@ app.get('/', function(req, res) {
 });
 
 var users = {};
+var winners = {};
 var userPlaying = {};
 var numPlayers = 0;
 var roundStarted = false;
@@ -137,15 +139,14 @@ function pickRandomProperty() {
     return result;
 }
 
-function startGame(socket) {
+function startGame() {
     var noImage = true;
     if(!imageQueried)
     {
         random = Math.floor((Math.random() * count) + 1); //just pick a random picture
         console.log(count);
         var collection = db.collection('items');
-        //while(noImage)
-        //{
+       
             collection.findOne({id:random},function (err, input)
             {
                 if(err)
@@ -159,7 +160,6 @@ function startGame(socket) {
                 }
                 else
                 {
-                    noImage = false;
                     console.log("Starting Game...");
                     currImg = input;
                     console.log(currImg);
@@ -167,32 +167,28 @@ function startGame(socket) {
                 }
             });
             imageQueried = true;
-       // }
+      
     }
     else
     {
-        socket.emit("game_started");
+        io.emit("game_started", currImg); //Send the currently playing image to spectators who joined later
+        console.log("Sending current image ");
+        console.log(currImg);
     }
 }
 
-// Socket.io 
-io.on('connection', function(socket){
- 
-    socket.on("join", function(username, callback){
-        users[socket.id] = username;
-        console.log(users[socket.id] + ' has connected ' + socket.id);
-
-        numPlayers += 1;
-        
-        io.emit("update-users", users);
+    function checkAndStartGame(socket){
+	io.emit("update-users", users);
         
         if(roundStarted === false)
         {
             if(numPlayers >= 6)
             {
-
+		imageQueried = false;
                 roundStarted = true;
-
+                userPlaying = {};
+                x = 0;
+               
                 for (i = 0; i < 5; i++) //pick 5 random users
                 {
                     var already_picked = true;
@@ -238,7 +234,7 @@ io.on('connection', function(socket){
                                 {
                                     playing = true;
                                     io.to(key).emit("playing", users, userPlaying);
-                                    startGame(socket); //Send  a broadcast to all users with image
+                                    startGame(); //Send  a broadcast to all users with image
                                 }
                             }
                         }
@@ -246,23 +242,38 @@ io.on('connection', function(socket){
                     if(playing === false)
                     {
                         io.to(key).emit("spectating", users, userPlaying);
-                        startGame(socket); 
+                        startGame(); 
                     }
                 }
             }
             else
             {
-                socket.emit("waiting-room");
+                io.emit("waiting-room");
             }                
         }
         else
         {
             socket.emit("spectating", users, userPlaying);
-            startGame(socket); 
+            console.log("A new spectator joined");
+            startGame();
         }
+    }
+
+    
+
+    // Socket.io 
+    io.on('connection', function(socket){
+ 
+    socket.on("join", function(username, callback){
+        users[socket.id] = username;
+        console.log(users[socket.id] + ' has connected ' + socket.id);
+
+        numPlayers += 1;
+        
+        checkAndStartGame(socket);
     });
 
-
+	
     socket.on("bid", function(bid){
         
 
@@ -290,7 +301,7 @@ io.on('connection', function(socket){
         if(size === 5)
         {
             //reset min
-            min = 0;
+            min = imagePrice;
 
             for(var key in playerBids)
             {
@@ -312,12 +323,12 @@ io.on('connection', function(socket){
             console.log(playerBidResults);
 
             //determine winner by finding the minimum or closest bid
-            console.log(min);
+            //console.log(min);
             for(var key in playerBidResults)
             {
                 if(playerBidResults.hasOwnProperty(key))
                 {
-                    min = playerBidResults[key];
+                    //min = playerBidResults[key];
                     if(playerBidResults[key] < min)
                     {
                         min = playerBidResults[key];
@@ -330,7 +341,25 @@ io.on('connection', function(socket){
             console.log("winner has this min");
             console.log(min);
 
-            io.emit("roundWinner", users[winner]);
+	    winners[winner] = users[winner]; //Add winner to winner array
+            console.log("sending winner " + users[winner]);
+            //io.emit("roundWinner", users[winner]);
+            
+	    io.emit("roundWinner", winners); //Send all winners as we have to display winners from max three rounds
+	    
+            delete users[winner]; //Delete winner from players so that spectator can play for next round
+            io.emit("update-users", users);
+	    io.to(winner).emit("spectating", users, userPlaying); //Send a message to the winner as he would be a spectator from now on
+	    roundStarted = false; //Ready for next round
+            console.log("Starting next round");
+            numPlayers = numPlayers - 1;
+            playerBids = new Object(); //clean up player bids for next round
+	    playerBidResults = new Object();
+	    winnerCount = winnerCount + 1;
+            if(winnerCount == 3) //Game Over
+		io.emit("game_over");
+            else
+            	checkAndStartGame(socket);
 
         }
         
@@ -338,10 +367,15 @@ io.on('connection', function(socket){
 
 
     socket.on("disconnect", function(){
-        console.log(users[socket.id] + " has left the server.");
-        //io.emit("update-users", users[socket.id]);
-        delete users[socket.id];
-        io.emit("update-users", users);
+        if(users[socket.id])
+        {
+       		console.log(users[socket.id] + " has left the server.");
+               	numPlayers = numPlayers - 1;
+        	delete users[socket.id];
+        	io.emit("update-users", users);
+                if(numPlayers < 6)
+                  roundStarted = false;
+        }
     });
 
 });
